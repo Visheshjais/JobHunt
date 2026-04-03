@@ -4,8 +4,15 @@
 // This file sets up the Express server with:
 //   • Middleware (JSON parsing, cookies, CORS)
 //   • Passport (Google OAuth 2.0 — JWT handles ongoing auth, no sessions needed)
+//   • DB middleware (ensures MongoDB is ready before every request)
 //   • Routes (user, company, job, application)
-//   • DB connection (lazy + cached for Vercel serverless compatibility)
+//
+// Vercel serverless model:
+//   Vercel does not run a persistent server. Instead, each incoming HTTP request
+//   spins up (or reuses) a short-lived function instance. This means:
+//     1. app.listen() must NOT be called in production — Vercel handles that.
+//     2. MongoDB can't be connected once at startup — it must be awaited per-request
+//        (but cached so we don't open a new connection every time).
 // ─────────────────────────────────────────────────────────────────────────────
 
 import express from "express";
@@ -35,16 +42,16 @@ app.use(cookieParser());                         // parse cookies (required for 
 // Once the handshake completes, we issue a JWT and store it in a cookie.
 // All subsequent requests are authenticated via JWT — NOT sessions.
 //
-// ⚠️  express-session + passport.session() are intentionally removed here.
-//     Vercel is a stateless serverless platform — in-memory session stores are
-//     wiped between function invocations, causing passport.session() to crash.
-//     Since our app uses JWT for ongoing auth, sessions are not needed at all.
-configurePassport();          // register the Google OAuth strategy with Passport
+// ⚠️  express-session + passport.session() are intentionally omitted.
+//     Vercel is stateless — in-memory session stores are wiped between
+//     function invocations, causing passport.session() to crash.
+//     Since our app uses JWT for ongoing auth, sessions are not needed.
+configurePassport();            // register the Google OAuth strategy with Passport
 app.use(passport.initialize()); // attach Passport to Express (no session support)
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
 // Allows the frontend (running on a different origin) to call this API.
-// credentials: true is required so the browser sends cookies with cross-origin requests.
+// credentials: true is required so the browser sends cookies cross-origin.
 const ALLOWED_ORIGINS = [
   "http://localhost:5173", // Vite dev server (default port)
   "http://localhost:5174", // Vite dev server (alternate port)
@@ -54,13 +61,13 @@ const ALLOWED_ORIGINS = [
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (e.g. Postman, server-to-server)
+      // Allow requests with no origin (e.g. Postman, server-to-server calls)
       if (!origin) return callback(null, true);
 
       // Allow all local dev origins
       if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
 
-      // Allow any Vercel deployment (covers preview + production URLs)
+      // Allow any Vercel deployment (covers all preview + production URLs)
       if (origin.endsWith(".vercel.app")) return callback(null, true);
 
       // Block everything else
@@ -70,39 +77,57 @@ app.use(
   })
 );
 
+// ── Database middleware ───────────────────────────────────────────────────────
+// WHY THIS EXISTS:
+//   On Vercel, a request can arrive before connectDB() finishes (race condition).
+//   Calling mongoose queries on a disconnected client causes:
+//     "MongooseError: Operation buffering timed out after 10000ms"
+//
+// HOW IT WORKS:
+//   Before every request reaches a route handler, we await connectDB().
+//   connectDB() in utils/db.js is cached — it only opens a new connection
+//   on a cold start. Warm instances reuse the existing connection instantly.
+//   This guarantees the DB is always ready before any query runs.
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next(); // DB is ready — proceed to route handler
+  } catch (err) {
+    console.error("❌ MongoDB connection failed:", err.message);
+    res.status(500).json({ message: "Database connection failed. Please try again." });
+  }
+});
+
 // ── API Routes ────────────────────────────────────────────────────────────────
-app.use("/api/v1/user",        userRoute);       // auth, profile, Google OAuth
-app.use("/api/v1/company",     companyRoute);    // recruiter company management
-app.use("/api/v1/job",         jobRoute);        // job listings (CRUD)
+// All routes are prefixed with /api/v1 to version the API.
+// If we ever make breaking changes, we can add /api/v2 routes alongside these.
+app.use("/api/v1/user",        userRoute);        // auth, profile, Google OAuth
+app.use("/api/v1/company",     companyRoute);     // recruiter company management
+app.use("/api/v1/job",         jobRoute);         // job listings (CRUD)
 app.use("/api/v1/application", applicationRoute); // job applications
 
 // ── Health check ──────────────────────────────────────────────────────────────
-// Quick sanity check — visit GET /api/health to confirm the server is alive.
-// Useful for Vercel deployment checks and uptime monitoring.
-app.get("/api/health", (_, res) => res.json({ ok: true, message: "JobHunt API is running 🚀" }));
+// Quick sanity check — GET /api/health confirms the server + DB are alive.
+// Useful for Vercel deployment verification and uptime monitoring.
+app.get("/api/health", (_, res) =>
+  res.json({ ok: true, message: "JobHunt API is running 🚀" })
+);
 
 // ── Server startup ────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 8000;
 
 if (process.env.NODE_ENV !== "production") {
-  // Development: spin up a real HTTP server on the configured port
+  // Development: start a real HTTP server on the configured port.
+  // We connect to DB here too so local dev works normally.
   app.listen(PORT, () => {
-    connectDB(); // connect to MongoDB after server starts
+    connectDB();
     console.log(`🚀 JobHunt Backend    → http://localhost:${PORT}`);
     console.log(`📡 Google OAuth start → http://localhost:${PORT}/api/v1/user/auth/google`);
   });
-} else {
-  // Production (Vercel): no app.listen() — Vercel handles incoming connections.
-  // We just need to connect to MongoDB before the first request is served.
-  //
-  // ⚠️  connectDB() in utils/db.js must cache the connection (check isConnected
-  //     before calling mongoose.connect) so repeated cold-start invocations
-  //     don't open a new connection every time.
-  connectDB().catch((err) =>
-    console.error("❌ MongoDB connection failed on startup:", err)
-  );
 }
 
-// Export the Express app so Vercel can invoke it as a serverless function.
-// Vercel looks for this default export in the file specified in vercel.json.
+// ── Vercel export ─────────────────────────────────────────────────────────────
+// In production, Vercel imports this file and calls the exported app
+// directly as a serverless function — no app.listen() needed.
+// The DB middleware above handles connection on every cold start.
 export default app;
