@@ -15,7 +15,7 @@
 //   1. Go to https://console.cloud.google.com
 //   2. Create a project → APIs & Services → Credentials
 //   3. Create OAuth 2.0 Client ID (Web Application type)
-//   4. Add "http://localhost:8000/api/v1/user/auth/google/callback" to redirect URIs
+//   4. Add your callback URL to Authorized Redirect URIs
 //   5. Copy Client ID + Secret into your .env file
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -56,11 +56,27 @@ export function configurePassport() {
         clientID:     process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
         callbackURL:  process.env.GOOGLE_CALLBACK_URL,
+
+        // ⚠️  state: false — required for Vercel serverless compatibility.
+        //
+        // Normally, Passport generates a random CSRF "state" token when the
+        // user is redirected to Google (step 1), stores it in the session,
+        // then verifies it when Google redirects back (step 2).
+        //
+        // On Vercel, each request runs in an isolated serverless function
+        // instance. The session stored in step 1 is gone by step 2 because
+        // they may land on completely different instances — causing a state
+        // mismatch and "Google sign in failed" error.
+        //
+        // Disabling state skips this cross-request session check.
+        // This is safe because we use short-lived JWT tokens for actual
+        // authentication security — not sessions.
+        state: false,
       },
       async (accessToken, refreshToken, profile, done) => {
         try {
-          const email = profile.emails[0].value;  // Gmail address
-          const name  = profile.displayName;       // Full name from Google
+          const email = profile.emails[0].value;   // Gmail address
+          const name  = profile.displayName;        // Full name from Google
           const photo = profile.photos[0]?.value || ""; // Profile picture URL
 
           // Check if this email already has an account
@@ -76,14 +92,14 @@ export function configurePassport() {
           }
 
           // ── New user: create account from Google profile data ─────────────
-          // Google users don't set a password — we mark it so the login
-          // controller can show a helpful error if they try email/password later.
+          // Google users don't set a password — we store a placeholder so the
+          // login controller can show a helpful error if they try email/password later.
           user = await User.create({
             fullname:    name,
             email,
-            phoneNumber: 0,                    // placeholder — update in profile
-            password:    "GOOGLE_OAUTH_USER",  // never used for login
-            role:        "student",            // default role
+            phoneNumber: 0,                   // placeholder — user can update in profile
+            password:    "GOOGLE_OAUTH_USER", // never used for login
+            role:        "student",           // default role — user can change in profile
             profile: { profilePhoto: photo },
           });
 
@@ -97,7 +113,7 @@ export function configurePassport() {
 
   // ── Serialize / Deserialize ──────────────────────────────────────────────────
   // Required by Passport even though we use JWT (not sessions) for the app.
-  // Passport needs these during the OAuth redirect flow.
+  // Passport internally calls these during the OAuth redirect flow.
   passport.serializeUser((user, done) => done(null, user._id));
   passport.deserializeUser(async (id, done) => {
     try {
