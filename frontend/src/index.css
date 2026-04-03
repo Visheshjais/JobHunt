@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.75rem;
+    --background: 0 0% 4%;
+    --foreground: 0 0% 98%;
+    --card: 240 15% 8%;
+    --border: 240 10% 12%;
+    --primary: 330 100% 59%;
+    --primary-foreground: 0 0% 100%;
+    --muted: 240 10% 15%;
+    --muted-foreground: 240 5% 55%;
+    --accent: 270 100% 56%;
+  }
+
+  * { @apply border-border; }
+
+  body {
+    @apply bg-surface text-white font-body;
+    background-color: #0a0a0f;
+  }
+
+  h1, h2, h3, h4, h5, h6 { @apply font-display; }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: #0a0a0f; }
+  ::-webkit-scrollbar-thumb { background: #2a2a3e; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #ff2d8d; }
+}
+
+@layer components {
+  /* ── Gradient text ── */
+  .gradient-text {
+    @apply bg-brand-gradient bg-clip-text text-transparent;
+  }
+
+  /* ── Glass card ── */
+  .glass-card {
+    background: rgba(18, 18, 26, 0.8);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  /* ── Glow button ── */
+  .btn-glow {
+    @apply relative overflow-hidden bg-brand-gradient text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300;
+    box-shadow: 0 0 20px rgba(255, 45, 141, 0.3);
+  }
+  .btn-glow:hover {
+    box-shadow: 0 0 35px rgba(255, 45, 141, 0.5);
+    transform: translateY(-2px);
+  }
+
+  /* ── Outline button ── */
+  .btn-outline {
+    @apply relative border border-brand-500/40 text-brand-400 font-semibold px-6 py-3 rounded-xl transition-all duration-300 hover:border-brand-400 hover:text-brand-300;
+  }
+
+  /* ── Input field ── */
+  .input-field {
+    @apply w-full bg-card border border-border rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-brand-500/60 focus:ring-1 focus:ring-brand-500/30 transition-all duration-200;
+  }
+
+  /* ── Badge ── */
+  .badge {
+    @apply inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold;
+  }
+  .badge-purple { @apply badge bg-violet-500/15 text-violet-300 border border-violet-500/20; }
+  .badge-pink   { @apply badge bg-brand-500/15 text-brand-300 border border-brand-500/20; }
+  .badge-green  { @apply badge bg-emerald-500/15 text-emerald-300 border border-emerald-500/20; }
+  .badge-orange { @apply badge bg-orange-500/15 text-orange-300 border border-orange-500/20; }
+
+  /* ── Shimmer skeleton ── */
+  .skeleton {
+    background: linear-gradient(90deg, #1a1a2e 25%, #242438 50%, #1a1a2e 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  /* ── Section container ── */
+  .section-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* ── Noise overlay ── */
+  .noise::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.03;
+  }
+}

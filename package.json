@@ -1,0 +1,15 @@
+{
+  "name": "jobhunt",
+  "version": "2.0.0",
+  "description": "JobHunt — Full stack job portal with Google OAuth",
+  "private": true,
+  "scripts": {
+    "install:all": "cd backend && npm install && cd ../frontend && npm install",
+    "dev:backend":  "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev"
+  },
+  "workspaces": [
+    "backend",
+    "frontend"
+  ]
+}
