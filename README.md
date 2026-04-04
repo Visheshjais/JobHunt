@@ -1,20 +1,48 @@
-# 🚀 JobHunt — Full Stack Job Portal
+```md
+<div align="center">
 
-A modern job portal built with **React + Node.js + MongoDB**.  
-Freshers can apply to jobs. Recruiters can post jobs, manage companies, and review applicants.
+# 🚀 JobHunt
+### A Modern Full Stack Job Portal
+
+![JobHunt](https://img.shields.io/badge/JobHunt-Job%20Portal-6c63ff?style=for-the-badge&logo=briefcase&logoColor=white)
+![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![Redux](https://img.shields.io/badge/Redux-Toolkit-593D88?style=for-the-badge&logo=redux&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-Express-339933?style=for-the-badge&logo=node.js&logoColor=white)
+![Express](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Cloudinary](https://img.shields.io/badge/Cloudinary-3448C5?style=for-the-badge&logo=cloudinary&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=JSON%20web%20tokens&logoColor=white)
+![Google OAuth](https://img.shields.io/badge/Google_OAuth-4285F4?style=for-the-badge&logo=google&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-5-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![Vercel](https://img.shields.io/badge/Hosted-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
+
+**Find jobs. Hire talent. Built with React + Node.js + MongoDB.**
+
+[🌐 Live Demo](https://job-hunt-pearl-six.vercel.app) · [🐛 Report Bug](https://github.com/Visheshjais/JobHunt/issues) · [💡 Request Feature](https://github.com/Visheshjais/JobHunt/issues)
+
+</div>
+
+---
+
+## 📖 What is JobHunt?
+
+JobHunt is a **full-stack job portal** where freshers can browse and apply to jobs while recruiters can post listings, manage companies, and review applicants — all in one place.
+
+The app has a **Node.js + Express backend** hosted on Vercel that handles authentication, job management, and file uploads via Cloudinary. A **MongoDB Atlas** database stores users, jobs, companies, and applications. The **React frontend** hosted on Vercel talks to it with a clean dark-mode UI built in Tailwind CSS and global state managed by Redux Toolkit.
 
 ---
 
 ## ✨ Features
 
-- 🔐 **Email/Password** login and registration
+- 🔐 **Email/Password Auth** — register and login securely with JWT cookies
 - 🟦 **Google OAuth 2.0** — sign in with Gmail in one click
-- 💼 **Job listings** with search, filters, and category browsing
-- 🏢 **Featured Companies** section on the homepage
-- 📋 **Recruiter dashboard** — post jobs, manage companies, accept/reject applicants
-- 🖼️ **Cloudinary** file uploads — profile photos + resumes
-- 📱 **Fully responsive** — works on mobile and desktop
-- 🌙 **Dark mode UI** with glass-card design
+- 💼 **Job Listings** — search, filter, and browse by category
+- 🏢 **Featured Companies** — homepage company showcase
+- 📋 **Recruiter Dashboard** — post jobs, manage companies, accept/reject applicants
+- 🖼️ **File Uploads** — profile photos and resumes via Cloudinary
+- 📱 **Fully Responsive** — works on mobile and desktop
+- 🌙 **Dark Mode UI** — glass-card design with gradient accents
 
 ---
 
@@ -44,9 +72,14 @@ jobhunt/
 
 ---
 
-## ⚙️ Setup & Installation
+## 🚀 Run Locally
 
-### 1. Clone / extract the project
+### 1. Clone the repo
+
+```bash
+git clone https://github.com/Visheshjais/JobHunt.git
+cd JobHunt
+```
 
 ### 2. Backend setup
 
@@ -68,12 +101,11 @@ cp .env.example .env
 npm run dev
 ```
 
-### 4. Open in browser
-
-```
-Frontend: http://localhost:5173
-Backend:  http://localhost:8000
-```
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:5173 |
+| Backend | http://localhost:8000 |
+| Health Check | http://localhost:8000/api/health |
 
 ---
 
@@ -101,7 +133,7 @@ Backend:  http://localhost:8000
 
 ---
 
-## 🟦 Google OAuth Setup (5 minutes)
+## 🟦 Google OAuth Setup
 
 1. Go to [console.cloud.google.com](https://console.cloud.google.com)
 2. Create a project → **APIs & Services** → **Credentials**
@@ -118,13 +150,28 @@ Backend:  http://localhost:8000
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | React 18, Vite, Tailwind CSS, Redux Toolkit |
+| Frontend | React 18, Vite 5, Tailwind CSS, Redux Toolkit |
 | Backend | Node.js, Express.js |
 | Database | MongoDB Atlas + Mongoose |
 | Auth | JWT (cookies) + Google OAuth 2.0 (Passport.js) |
 | File Uploads | Multer + Cloudinary |
 | UI Icons | Lucide React |
 | Notifications | Sonner (toast) |
+| Hosting | Vercel (frontend + backend) |
+
+---
+
+## 🔐 How Auth Works
+
+```
+Email/Password → backend validates → JWT set in HTTP-only cookie
+                        ↓
+Google OAuth → Passport verifies → JWT passed in redirect URL
+                        ↓
+Frontend stores token as cookie → calls /api/v1/user/me
+                        ↓
+User loaded into Redux → authenticated session begins
+```
 
 ---
 
@@ -149,6 +196,45 @@ Backend:  http://localhost:8000
 | POST | `/api/v1/job/post` | Yes | Post new job |
 | GET | `/api/v1/job/getadminjobs` | Yes | Get recruiter's jobs |
 
+### Companies
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| POST | `/api/v1/company/register` | Yes | Register company |
+| GET | `/api/v1/company/get` | Yes | Get your companies |
+| PUT | `/api/v1/company/update/:id` | Yes | Update company |
+
+### Applications
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| POST | `/api/v1/application/apply/:id` | Yes | Apply to job |
+| GET | `/api/v1/application/get` | Yes | Get applied jobs |
+| GET | `/api/v1/application/:id/applicants` | Yes | Get applicants |
+| PUT | `/api/v1/application/status/:id` | Yes | Accept / Reject |
+
 ---
 
-*Built with ❤️ using React + Node.js + MongoDB*
+## 🌐 Deployment
+
+| Part | Platform | URL |
+|------|----------|-----|
+| Frontend | Vercel | [job-hunt-pearl-six.vercel.app](https://job-hunt-pearl-six.vercel.app) |
+| Backend | Vercel | [job-hunt-backend-sand.vercel.app](https://job-hunt-backend-sand.vercel.app) |
+| Database | MongoDB Atlas | Cluster0 |
+
+---
+
+## 👨‍💻 Author
+
+**Vishesh Jaiswal**
+- GitHub: [@Visheshjais](https://github.com/Visheshjais)
+
+---
+
+<div align="center">
+
+Made with ❤️ and lots of coffee by **Vishesh Jaiswal**
+
+⭐ Star this repo if you liked it!
+
+</div>
+```
