@@ -1,4 +1,3 @@
-```md
 <div align="center">
 
 # 🚀 JobHunt
@@ -178,6 +177,7 @@ User loaded into Redux → authenticated session begins
 ## 📡 API Reference
 
 ### User
+
 | Method | Route | Auth | Description |
 |--------|-------|------|-------------|
 | POST | `/api/v1/user/register` | No | Create account |
@@ -189,6 +189,7 @@ User loaded into Redux → authenticated session begins
 | GET | `/api/v1/user/auth/google/callback` | No | Google callback |
 
 ### Jobs
+
 | Method | Route | Auth | Description |
 |--------|-------|------|-------------|
 | GET | `/api/v1/job/get` | No | Get all jobs |
@@ -197,6 +198,7 @@ User loaded into Redux → authenticated session begins
 | GET | `/api/v1/job/getadminjobs` | Yes | Get recruiter's jobs |
 
 ### Companies
+
 | Method | Route | Auth | Description |
 |--------|-------|------|-------------|
 | POST | `/api/v1/company/register` | Yes | Register company |
@@ -204,6 +206,7 @@ User loaded into Redux → authenticated session begins
 | PUT | `/api/v1/company/update/:id` | Yes | Update company |
 
 ### Applications
+
 | Method | Route | Auth | Description |
 |--------|-------|------|-------------|
 | POST | `/api/v1/application/apply/:id` | Yes | Apply to job |
@@ -237,4 +240,3 @@ Made with ❤️ and lots of coffee by **Vishesh Jaiswal**
 ⭐ Star this repo if you liked it!
 
 </div>
-```
